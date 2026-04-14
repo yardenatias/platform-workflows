@@ -1,0 +1,28 @@
+name: Create Readiness Review
+
+on:
+  workflow_dispatch:
+    inputs:
+      service_name:
+        description: "Service name"
+        required: true
+      target_environment:
+        description: "Target environment"
+        required: true
+      change_summary:
+        description: "Change summary"
+        required: false
+      jira_reference:
+        description: "Jira or release reference"
+        required: false
+
+jobs:
+  create-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create issue placeholder
+        run: |
+          echo "Readiness review requested for ${{ github.event.inputs.service_name }}"
+          echo "Target environment: ${{ github.event.inputs.target_environment }}"
+          echo "Change summary: ${{ github.event.inputs.change_summary }}"
+          echo "Jira reference: ${{ github.event.inputs.jira_reference }}"
