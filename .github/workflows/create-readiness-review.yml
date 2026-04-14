@@ -6,15 +6,22 @@ on:
       service_name:
         description: "Service name"
         required: true
+        type: string
       target_environment:
         description: "Target environment"
         required: true
+        type: string
       change_summary:
         description: "Change summary"
         required: false
+        type: string
       jira_reference:
         description: "Jira or release reference"
         required: false
+        type: string
+      port_context:
+        required: true
+        type: string
 
 jobs:
   create-issue:
