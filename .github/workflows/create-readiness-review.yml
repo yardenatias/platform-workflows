@@ -7,6 +7,10 @@ on:
         description: "Service name"
         required: true
         type: string
+      repository_name:
+        description: "GitHub repository name"
+        required: true
+        type: string
       target_environment:
         description: "Target environment"
         required: true
@@ -36,7 +40,7 @@ jobs:
           operation: PATCH_RUN
           runId: ${{ fromJson(inputs.port_context).runId }}
           logMessage: |
-            Starting production readiness review request...
+            Starting production readiness review request for service: ${{ inputs.service_name }}
 
       - name: Create GitHub issue
         id: create_issue
@@ -46,6 +50,7 @@ jobs:
           ISSUE_TITLE="Production readiness review request - ${{ inputs.service_name }}"
           ISSUE_BODY=$(jq -n \
             --arg service "${{ inputs.service_name }}" \
+            --arg repo "${{ inputs.repository_name }}" \
             --arg env "${{ inputs.target_environment }}" \
             --arg summary "${{ inputs.change_summary }}" \
             --arg jira "${{ inputs.jira_reference }}" \
@@ -53,6 +58,7 @@ jobs:
               "## Production Readiness Review Request",
               "",
               "- **Service:** \($service)",
+              "- **Repository:** \($repo)",
               "- **Target environment:** \($env)",
               "- **Change summary:** \($summary)",
               "- **Jira reference:** \($jira)"
@@ -63,7 +69,7 @@ jobs:
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "Content-Type: application/json" \
             -d "$(jq -n --arg title "$ISSUE_TITLE" --arg body "$ISSUE_BODY" '{title: $title, body: $body}')" \
-            "https://api.github.com/repos/yardenatias/${{ inputs.service_name }}/issues")
+            "https://api.github.com/repos/yardenatias/${{ inputs.repository_name }}/issues")
 
           HTTP_STATUS=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | sed '$d')
@@ -89,7 +95,7 @@ jobs:
           status: SUCCESS
           runId: ${{ fromJson(inputs.port_context).runId }}
           logMessage: |
-            GitHub issue created successfully: ${{ steps.create_issue.outputs.issue_url }}
+            GitHub issue created successfully for service ${{ inputs.service_name }}: ${{ steps.create_issue.outputs.issue_url }}
 
       - name: Inform Port that run failed
         if: failure()
@@ -101,4 +107,4 @@ jobs:
           status: FAILURE
           runId: ${{ fromJson(inputs.port_context).runId }}
           logMessage: |
-            Failed to create GitHub issue for service ${{ inputs.service_name }}
+            Failed to create GitHub issue for service ${{ inputs.service_name }} in repository ${{ inputs.repository_name }}
